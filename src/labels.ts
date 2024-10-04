@@ -3,7 +3,7 @@ import { Label, LabelSchema } from './schemas.ts';
 
 export const LABELS: readonly Label[] = [
 	{
-		rkey: 'rkey tbd',
+		rkey: '3jzfcijpj2z2a',
 		identifier: 'pvp',
 		locales: [
 			{
@@ -15,7 +15,7 @@ export const LABELS: readonly Label[] = [
 		],
 	},
 	{
-		rkey: 'rkey tbd',
+		rkey: '3jzfcijpj2z2b',
 		identifier: 'pve',
 		locales: [
 			{
@@ -27,7 +27,7 @@ export const LABELS: readonly Label[] = [
 		],
 	},
 	{
-		rkey: "'rkey tbd'",
+		rkey: '3jzfcijpj2z2c',
 		identifier: 'rp',
 		locales: [
 			{

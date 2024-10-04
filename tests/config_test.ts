@@ -24,8 +24,8 @@ export const CONFIG = ConfigSchema.parse(envConfig);
 z.object(ConfigSchema.shape).parse(CONFIG);
 
 const testConfig = {
-	DID: 'did:plc:?',
-	SIGNING_KEY: 'did:key:?',
+	DID: 'did:plc:7iza6de2dwap2sbkpav7c6c6',
+	SIGNING_KEY: 'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme',
 	JETSTREAM_URL: 'wss://jetstream.atproto.tools/subscribe',
 	COLLECTION: 'app.bsky.feed.like',
 	CURSOR_INTERVAL: 100000,
@@ -35,9 +35,38 @@ const testConfig = {
 
 Deno.test('.env file load validation', () => {
 	assertEquals(ConfigSchema.parse(CONFIG), testConfig);
-	assertThrows(
-		() => ConfigSchema.parse({ ...CONFIG, JETSTREAM_URL: 'not-a-url' }),
-		Error,
-		'Invalid url',
-	);
+	Deno.test('.env file load validation', () => {
+		assertEquals(ConfigSchema.parse(CONFIG), testConfig);
+
+		assertThrows(
+			() => ConfigSchema.parse({ ...CONFIG, JETSTREAM_URL: 'not-a-url' }),
+			Error,
+			'Invalid url',
+		);
+
+		assertThrows(
+			() => ConfigSchema.parse({ ...CONFIG, DID: 'invalid-did' }),
+			Error,
+			'invalid_string',
+		);
+
+		assertThrows(
+			() =>
+				ConfigSchema.parse({ ...CONFIG, SIGNING_KEY: 'invalid-signing-key' }),
+			Error,
+			'invalid_string',
+		);
+
+		assertThrows(
+			() => ConfigSchema.parse({ ...CONFIG, CURSOR_INTERVAL: -1 }),
+			Error,
+			'Number must be greater than 0',
+		);
+
+		assertThrows(
+			() => ConfigSchema.parse({ ...CONFIG, BSKY_HANDLE: '' }),
+			Error,
+			'String must contain at least 1 character(s)',
+		);
+	});
 });

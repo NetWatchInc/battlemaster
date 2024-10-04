@@ -1,9 +1,11 @@
 import { assertEquals, assertThrows } from '@std/assert';
 import {
 	ConfigSchema,
+	DidSchema,
 	LabelSchema,
 	LabelValueDefinitionSchema,
 	LocaleSchema,
+	SigningKeySchema,
 } from '../src/schemas.ts';
 
 Deno.test('LocaleSchema validation', () => {
@@ -32,9 +34,15 @@ Deno.test('LabelSchema validation', () => {
 	assertEquals(LabelSchema.parse(validLabel), validLabel);
 
 	assertThrows(
-        () => LabelSchema.parse({ ...validLabel, rkey: '3jzfcijpj2z2aa' }),
+		() => LabelSchema.parse({ ...validLabel, rkey: '3jzfcijpj2z2aa' }),
 		Error,
 		'String must contain exactly 13 character(s)',
+	);
+
+	assertThrows(
+		() => LabelSchema.parse({ ...validLabel, rkey: '3jzfcijpj2z2A' }),
+		Error,
+		'invalid_string',
 	);
 });
 
@@ -67,8 +75,8 @@ Deno.test('LabelValueDefinitionSchema validation', () => {
 
 Deno.test('ConfigSchema validation', () => {
 	const validConfig = {
-		DID: 'did:plc:?',
-		SIGNING_KEY: 'did:key:?',
+		DID: 'did:plc:7iza6de2dwap2sbkpav7c6c6',
+		SIGNING_KEY: 'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme',
 		JETSTREAM_URL: 'wss://jetstream.atproto.tools/subscribe',
 		COLLECTION: 'app.bsky.feed.like',
 		CURSOR_INTERVAL: 100000,
@@ -77,9 +85,43 @@ Deno.test('ConfigSchema validation', () => {
 	};
 	assertEquals(ConfigSchema.parse(validConfig), validConfig);
 
+	const validConfigWithP256 = {
+		...validConfig,
+		SIGNING_KEY: 'did:key:zDnaerx9CtbPJ1q36T5Ln5wYt3MQYeGRG5ehnPAmxcf5mDZpv',
+	};
+	assertEquals(ConfigSchema.parse(validConfigWithP256), validConfigWithP256);
+
+	assertThrows(
+		() => ConfigSchema.parse({ ...validConfig, DID: 'invalid-did' }),
+		Error,
+		'invalid_string',
+	);
+
+	assertThrows(
+		() => ConfigSchema.parse({ ...validConfig, SIGNING_KEY: 'invalid-key' }),
+		Error,
+		'invalid_string',
+	);
+
 	assertThrows(
 		() => ConfigSchema.parse({ ...validConfig, JETSTREAM_URL: 'not-a-url' }),
 		Error,
 		'Invalid url',
 	);
+
+	assertThrows(
+		() => ConfigSchema.parse({ ...validConfig, CURSOR_INTERVAL: -1 }),
+		Error,
+		'Number must be greater than 0',
+	);
+
+	assertThrows(
+		() => ConfigSchema.parse({ ...validConfig, BSKY_HANDLE: undefined }),
+		Error,
+		'Required',
+	);
+
+	assertEquals(ConfigSchema.shape.DID, DidSchema);
+
+	assertEquals(ConfigSchema.shape.SIGNING_KEY, SigningKeySchema);
 });
