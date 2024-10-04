@@ -1,11 +1,11 @@
 # ⚔️ Battlemaster ⚔️
 
-Welcome, brave posters! In the world of Bluesky, every post is a potential battleground, every thread a possible duel to the end. Choose your label wisely.
+Welcome, brave posters. In the world of Bluesky, every post is a potential battleground, every thread a possible duel to the end. Choose your label wisely.
 
 ## 🏹 Labels
 
 - **PvP**: For the keyboard warriors who thrive in the trenches of the replies.
-- **PvE**: For the users that just want to craft bits and not be bothered.
+- **PvE**: For the users who just want to craft bits and not be bothered.
 - **RP**: For those who found themselves on the wrong server.
 
 ## 🏆 Contributing
