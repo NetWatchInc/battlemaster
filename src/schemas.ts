@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 export const RkeySchema = z.string()
 	.length(13)
-    .regex(/^[a-z2-7]{13}$/);
+	.regex(/^[a-z2-7]{13}$/);
 
 // did:plc
 // the overall identifier length is 32 characters
@@ -26,7 +26,7 @@ const didKeySecp256k1Schema = z.string()
 // did:key schema for NIST P-256 keys
 
 const didKeyP256Schema = z.string()
-    .regex(/^did:key:zDn[a-zA-Z0-9]{46}$/);
+	.regex(/^did:key:zDn[a-zA-Z0-9]{46}$/);
 
 // Combined did:key schema
 
