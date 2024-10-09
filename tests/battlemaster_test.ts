@@ -74,7 +74,7 @@ class MockBattlemaster {
         });
     }
 
-    private findLabelByPost(rkey: string): any | undefined {
+    private findLabelByPost(rkey: string): { identifier: string } | undefined {
         return LABELS.find((label) => label.rkey === rkey);
     }
 
@@ -128,6 +128,7 @@ Deno.test('Battlemaster', async (t) => {
 
     await t.step('getCategoryFromLabel - invalid label', async () => {
         const battlemaster = new MockBattlemaster();
+
         await assertRejects(
             async () => {
                 await battlemaster['getCategoryFromLabel']('invalid-label');

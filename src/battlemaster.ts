@@ -64,12 +64,13 @@ export class Battlemaster {
 	}
 
 	private fetchCurrentLabels(did: string): Record<Category, Set<string>> {
-		const categories: Category[] = ['pvp', 'pve', 'rp'];
-		const labelCategories: Record<Category, Set<string>> = {
-			pvp: new Set(),
-			pve: new Set(),
-			rp: new Set(),
+		const labelCategories = {
+			pvp: new Set<string>(),
+			pve: new Set<string>(),
+			rp: new Set<string>(),
 		};
+		type Category = keyof typeof labelCategories;
+		const categories = Object.keys(labelCategories) as Category[];
 
 		for (const category of categories) {
 			const prefix = CATEGORY_PREFIXES[category];
