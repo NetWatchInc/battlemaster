@@ -22,7 +22,7 @@ export const LABELS: readonly Label[] = [
 				lang: 'en',
 				name: 'PvE 🛡️',
 				description:
-					"Not ready for the battlegrounds. You're just here to level professions in front of the auction house. Work work.",
+					"Not willing to queue up for battlegrounds. You're just here to level professions and browse some custom feeds. Work work.",
 			},
 		],
 	},
