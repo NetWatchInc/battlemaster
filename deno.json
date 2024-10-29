@@ -19,7 +19,7 @@
 		"kv:update": "deno run --allow-read --allow-write --unstable-kv scripts/kv_cli.ts update",
 		"kv:delete": "deno run --allow-read --allow-write --unstable-kv scripts/kv_cli.ts delete",
 		"kv:wipe": "deno run --allow-read --allow-write --unstable-kv scripts/kv_cli.ts wipe",
-		"kv:setup": "deno run --allow-read --allow-write --allow-env --unstable-kv scripts/_kv_setup.ts",
+		"kv:setup": "deno run --allow-read --allow-write --allow-env --unstable-kv scripts/kv_setup.ts",
 		"metrics": "deno run --allow-read --allow-write --unstable-kv scripts/metrics_cli.ts show",
 		"metrics:reset": "deno run --allow-read --allow-write --unstable-kv scripts/metrics_cli.ts reset",
 		"fmt": "deno fmt src scripts tests",
