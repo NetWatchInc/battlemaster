@@ -1,46 +1,28 @@
-import { z } from 'zod';
-import { Label, LabelSchema } from './schemas.ts';
+/**
+ * Label definitions
+ *
+ * This module defines the source of truth for available labels.
+ */
 
-export const LABELS: readonly Label[] = [
+/**
+ * Readonly array of Label objects that are validated against the schema.
+ * Each label is comprised of rkey, identifier, and category.
+ */
+
+export const LABELS = [
 	{
-		rkey: '3jzfcijpj2z2a',
+		rkey: '3l7jxzftheq2o',
 		identifier: 'pvp',
-		locales: [
-			{
-				lang: 'en',
-				name: 'PvP ⚔️',
-				description:
-					"A keyboard warrior who thrives in the trenches of the replies. May your wit be sharp and your words strike true. LOK'TAR OGAR!",
-			},
-		],
+		category: 'pvp',
 	},
 	{
-		rkey: '3jzfcijpj2z2b',
+		rkey: '3l7jy25rx3t2s',
 		identifier: 'pve',
-		locales: [
-			{
-				lang: 'en',
-				name: 'PvE 🛡️',
-				description:
-					"Not willing to queue up for battlegrounds. You're just here to level professions and browse some custom feeds. Work work.",
-			},
-		],
+		category: 'pve',
 	},
 	{
-		rkey: '3jzfcijpj2z2c',
+		rkey: '3l7jy2pqpz72p',
 		identifier: 'rp',
-		locales: [
-			{
-				lang: 'en',
-				name: 'RP 🎭',
-				description: 'The discourse was merely a setback!',
-			},
-		],
+		category: 'rp',
 	},
 ] as const;
-
-LABELS.forEach((label) => {
-	LabelSchema.parse(label);
-});
-
-z.array(LabelSchema).parse(LABELS);

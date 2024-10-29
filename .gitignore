@@ -1,2 +1,7 @@
-.env
+# Directories
+coverage
+logs
+
+# Files
 deno.lock
+labels*
