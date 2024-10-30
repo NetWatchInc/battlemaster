@@ -133,6 +133,7 @@ export class Labeler {
 					uri: validatedSubject,
 					val: currentLabel.val,
 					neg: true,
+					src: this.labelerServer.did,
 				});
 				this.logger.info(
 					`Negated existing label ${currentLabel.val} for ${validatedSubject}`,
@@ -144,6 +145,7 @@ export class Labeler {
 			await this.labelerServer.createLabel({
 				uri: validatedSubject,
 				val: newLabel.identifier,
+				src: this.labelerServer.did,
 			});
 
 			await this.metrics.incrementLabel(newLabel.identifier);
