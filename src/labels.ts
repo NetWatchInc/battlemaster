@@ -30,5 +30,5 @@ export const LABELS = [
 		rkey: '3l7jy2zq3z2qo',
 		identifier: '',
 		category: '',
-	}
+	},
 ] as const;

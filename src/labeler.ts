@@ -180,8 +180,13 @@ export class Labeler {
 				LIMIT 1
 			`);
 
-			const result = await query.get(did) as { val: string; neg: boolean } | undefined;
-			if (!result || typeof result.val === 'undefined' || typeof result.neg === 'undefined') {
+			const result = await query.get(did) as
+				| { val: string; neg: boolean }
+				| undefined;
+			if (
+				!result || typeof result.val === 'undefined' ||
+				typeof result.neg === 'undefined'
+			) {
 				return null;
 			}
 
