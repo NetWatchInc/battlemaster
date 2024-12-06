@@ -1,11 +1,16 @@
 /**
- * Core application file
+ * Core application file for Battlemaster
  *
- * - Imports necessary modules and initializes key components
- * - Sets up logging, configuration, and Deno KV store
- * - Manages ATP agent, Labeler instance, and Jetstream connection
- * - Handles cursor initialization and updates
- * - Implements error handling and graceful shutdown
+ * This module serves as the primary entry point for the Battlemaster labeler,
+ * providing comprehensive connection and event management. It orchestrates all major
+ * components and ensures robust error handling throughout the application lifecycle.
+ *
+ * Primary responsibilities include:
+ * - Configuration initialization and validation
+ * - ATP authentication and session management
+ * - Jetstream connection lifecycle management
+ * - Event processing and cursor management
+ * - Graceful shutdown coordination
  */
 
 import { AtpAgent } from 'atproto';
@@ -17,17 +22,24 @@ import { verifyKvStore } from '../scripts/kv_utils.ts';
 import { AtpError, JetstreamError } from './errors.ts';
 import * as log from '@std/log';
 import { MetricsTracker } from './metrics.ts';
+import { Handler } from './handler.ts';
 
 const kv = await Deno.openKv();
 const logger = log.getLogger();
 
 /**
- * Main function orchestrating the application.
- * Initializes config, verifies KV store, sets up ATP agent, Labeler, and Jetstream.
- * Manages login, cursor, listeners, and shutdown handlers.
+ * Orchestrates the Battlemaster application lifecycle.
+ * Initializes core services and establishes necessary connections.
  *
- * @throws {AtpError} If ATP initialization or login fails
- * @throws {JetstreamError} If Jetstream connection fails
+ * The function follows a sequential initialization process:
+ * 1. Configuration and KV store setup
+ * 2. ATP authentication
+ * 3. Labeler initialization
+ * 4. Jetstream connection establishment
+ * 5. Event handler configuration
+ *
+ * @throws {AtpError} If ATP initialization or authentication fails
+ * @throws {JetstreamError} If Jetstream connection initialization fails
  */
 async function main() {
 	try {
@@ -72,13 +84,16 @@ async function main() {
 				cursor: cursor,
 			});
 
+			// Configure event processing
 			setupJetstreamListeners(jetstream, labeler);
 
-			jetstream.start();
-			logger.info('Jetstream started');
+			// Initialize connection management
+			const handler = new Handler(jetstream);
+			await handler.start();
+			logger.info('Jetstream started with connection management');
 
 			setupCursorUpdateInterval(jetstream);
-			setupShutdownHandlers(labeler, jetstream);
+			setupShutdownHandlers(labeler, handler);
 		} catch (error) {
 			if (error instanceof Error) {
 				throw new JetstreamError(
@@ -101,9 +116,8 @@ async function main() {
 }
 
 /**
- * Initializes or retrieves the cursor value from the KV store.
- * The cursor represents a point in time (in microseconds) from which
- * to start processing events.
+ * Manages cursor initialization and retrieval.
+ * Ensures proper event tracking by maintaining the last processed position.
  *
  * @returns The cursor value in microseconds since epoch
  */
@@ -128,67 +142,18 @@ async function initializeCursor(): Promise<number> {
 }
 
 /**
- * Sets up event listeners for Jetstream.
- * Handles 'open', 'close', and 'error' events.
- * Processes 'create' events for the specified collection.
+ * Configures Jetstream event listeners and processing logic.
+ * Handles event validation and processing through the labeler.
  *
- * @param jetstream - The Jetstream instance
- * @param labeler - The Labeler instance
+ * @param jetstream - The Jetstream instance for event subscription
+ * @param labeler - The Labeler instance for event processing
  */
-function setupJetstreamListeners(jetstream: Jetstream, labeler: Labeler) {
-	let reconnectAttempt = 0;
-	const MAX_RECONNECT_ATTEMPTS = 10;
-
-	jetstream.on('open', () => {
-		// Reset reconnection counter on successful connection
-		reconnectAttempt = 0;
-		logger.info(
-			`Connected to Jetstream at ${CONFIG.JETSTREAM_URL} with cursor ${jetstream.cursor}`,
-		);
-	});
-
-	jetstream.on('close', () => {
-		logger.info('Jetstream connection closed');
-
-		// Reconnection with exponential backoff
-		if (reconnectAttempt < MAX_RECONNECT_ATTEMPTS) {
-			const delay = Math.min(1000 * Math.pow(2, reconnectAttempt), 30000); // Cap at 30 seconds
-			reconnectAttempt++;
-
-			logger.info(
-				`Attempting reconnection in ${delay}ms (attempt ${reconnectAttempt}/${MAX_RECONNECT_ATTEMPTS})`,
-			);
-
-			setTimeout(() => {
-				try {
-					jetstream.start();
-				} catch (error) {
-					logger.error(
-						`Reconnection attempt failed: ${
-							error instanceof Error ? error.message : String(error)
-						}`,
-					);
-				}
-			}, delay);
-		} else {
-			logger.error(
-				'Max reconnection attempts reached. Manual intervention required.',
-			);
-		}
-	});
-
-	jetstream.on('error', () => {
-		// Just log that an error occurred - don't try to access error properties
-		// as the underlying WebSocket implementation might not provide them
-		logger.error('Jetstream encountered a WebSocket error');
-
-		// Let the close handler handle reconnection
-		// as error events are usually followed by close events
-	});
-
+function setupJetstreamListeners(
+	jetstream: Jetstream<string, string>,
+	labeler: Labeler,
+) {
 	jetstream.onCreate(CONFIG.COLLECTION, async (event: unknown) => {
 		try {
-			// Type guard for event structure
 			if (!isValidEvent(event)) {
 				logger.error('Received invalid event structure:', { event });
 				return;
@@ -217,7 +182,11 @@ function setupJetstreamListeners(jetstream: Jetstream, labeler: Labeler) {
 }
 
 /**
- * Type guard to validate Jetstream event structure
+ * Event structure type guard.
+ * Ensures incoming events conform to the expected format.
+ *
+ * @param event - The event object requiring validation
+ * @returns Boolean indicating if the event structure is valid
  */
 function isValidEvent(event: unknown): event is {
 	did: string;
@@ -251,12 +220,12 @@ function isValidEvent(event: unknown): event is {
 }
 
 /**
- * Sets up an interval to periodically update the cursor value in the KV store.
- * This ensures we can resume from the last processed event after a restart.
+ * Establishes periodic cursor state persistence.
+ * Ensures recovery point maintenance for event processing.
  *
- * @param jetstream - The Jetstream instance to get the cursor from
+ * @param jetstream - The Jetstream instance providing cursor values
  */
-function setupCursorUpdateInterval(jetstream: Jetstream) {
+function setupCursorUpdateInterval(jetstream: Jetstream<string, string>) {
 	setInterval(async () => {
 		if (jetstream.cursor) {
 			logger.info(
@@ -270,17 +239,17 @@ function setupCursorUpdateInterval(jetstream: Jetstream) {
 }
 
 /**
- * Sets up handlers for SIGINT and SIGTERM signals to ensure graceful shutdown.
- * Closes all connections and cleans up resources before exiting.
+ * Configures graceful shutdown handlers.
+ * Ensures proper cleanup of resources during application termination.
  *
- * @param labeler - The Labeler instance to shut down
- * @param jetstream - The Jetstream instance to close
+ * @param labeler - The Labeler instance requiring cleanup
+ * @param handler - The Handler instance managing connection state
  */
-function setupShutdownHandlers(labeler: Labeler, jetstream: Jetstream) {
+function setupShutdownHandlers(labeler: Labeler, handler: Handler) {
 	const shutdown = async () => {
 		logger.info('Shutting down...');
 		await labeler.shutdown();
-		jetstream.close();
+		await handler.shutdown();
 		await closeConfig();
 		kv.close();
 		Deno.exit(0);
@@ -290,7 +259,7 @@ function setupShutdownHandlers(labeler: Labeler, jetstream: Jetstream) {
 	Deno.addSignalListener('SIGTERM', shutdown);
 }
 
-// Main execution
+// Application entry point
 main().catch((error) => {
 	logger.critical(
 		`Unhandled error in main: ${
