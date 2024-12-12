@@ -30,6 +30,7 @@ export const defaultConfig: z.infer<typeof ConfigSchema> = {
 	SIGNING_KEY: 'K8ej1iNr0qpOT5RQZzA7/nMx2+4dFgYuCVbL3PwcJaU',
 	JETSTREAM_URL: 'wss://jetstream1.us-west.bsky.network/subscribe',
 	COLLECTION: 'app.bsky.feed.like',
+	CURSOR: 0,
 	CURSOR_INTERVAL: 10000,
 	BSKY_HANDLE: 'default.handle',
 	BSKY_PASSWORD: 'default_password',
