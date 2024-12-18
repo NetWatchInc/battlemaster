@@ -110,7 +110,9 @@ export async function setConfigValue<
 	const logValue = ['SIGNING_KEY', 'BSKY_PASSWORD'].includes(key)
 		? '[REDACTED]'
 		: value;
-	logger?.info(`Config value set: ${key} = ${logValue}`);
+	if (key != 'CURSOR') {
+		logger?.info(`Config value set: ${key} = ${logValue}`);
+	}
 }
 
 /**
